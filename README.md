@@ -20,4 +20,5 @@ Very preliminary version.
  <li>Visual Studio 1.48.1 PLATFORMIO 2.2.1 Espressif32 v3.3.2</li>
  <li>Arduino IDE 1.8.11 Espressif System 1.0.6</li>
  <li>ArduinoDroid (6.3.1)</li>
+ <li><b>Precompile version: </b> <a href='https://github.com/rpsubc8/ESP32TinyAnotherWorld/tree/main/esp32/precompile'>https://github.com/rpsubc8/ESP32TinyAnotherWorld/tree/main/esp32/precompile</a></li>
 </ul>
