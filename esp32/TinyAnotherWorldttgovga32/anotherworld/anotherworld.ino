@@ -40,6 +40,57 @@
 #include "video.h"
 #include <Arduino.h>
 
+#ifdef use_lib_esp32sound
+ #include <driver/dac.h>
+
+ //No necesita rtc_io.reg ni soc.h, compila PLATFORMIO,Arduino IDE y ArduinoDROID
+ //DAC 1 GPIO25
+ #define DR_REG_RTCIO_BASE 0x3ff48400
+ #define RTC_IO_PAD_DAC1_REG (DR_REG_RTCIO_BASE + 0x84)
+ #define RTC_IO_PDAC1_DAC 0x000000FF
+ #define RTC_IO_PDAC1_DAC_S 19
+
+ //DAC 2 GPIO26
+ #define RTC_IO_PAD_DAC2_REG (DR_REG_RTCIO_BASE + 0x88)
+ #define RTC_IO_PDAC2_DAC 0x000000FF
+ #define RTC_IO_PDAC2_DAC_S 19
+
+
+ #define SENS_SAR_DAC_CTRL2_REG (DR_REG_SENS_BASE + 0x009c)
+ #define SENS_DAC_CW_EN1_M  (BIT(24))
+ #define SENS_DAC_CW_EN2_M  (BIT(25))
+
+ //2048 8 Khz
+ #define max_dac_buffer 2048
+ static DRAM_ATTR unsigned char gb_dac_buf_r[max_dac_buffer]; 
+ unsigned int *gb_dac_buf32_r= (unsigned int *)gb_dac_buf_r;
+ //unsigned int *gb_wav_raw32_r= (unsigned int *)gb_wav_raw_r; 
+
+ volatile unsigned int gb_dac_read=0;
+ volatile unsigned int gb_dac_write=max_dac_buffer>>1; //max_dac_buffer/2;
+ volatile unsigned int gb_dac_write32=max_dac_buffer>>3; //(max_dac_buffer/2)/4; 
+
+ volatile unsigned char gb_spk_data_r= 0; //canal derecho
+ volatile unsigned char gb_spk_data_r_before= 0;
+ volatile unsigned char gb_spk_data_l= 0; //canal izquierdo
+ volatile unsigned char gb_spk_data_l_before= 0;
+ volatile unsigned int gb_contador_muestra=0;
+ volatile unsigned int gb_contador_muestra32=0;
+
+ hw_timer_t *gb_timerSound = NULL;
+ hw_timer_t *gb_timerRellenoSonido = NULL;
+
+ //volatile unsigned char gb_snd_cont=0;
+ volatile unsigned char gb_snd_play[4];
+ volatile unsigned char * gb_snd_data[4];
+ volatile unsigned short int gb_snd_len[4];
+ volatile unsigned short int gb_snd_pos_loop[4];
+ volatile unsigned short int gb_snd_pos_cur[4];
+
+ void IRAM_ATTR onTimerSoundDAC(void);
+ void IRAM_ATTR GeneraRAW(void); 
+#endif
+
 unsigned char gb_use_keyb_left=0;
 unsigned char gb_use_keyb_right=0;
 unsigned char gb_use_keyb_up=0;
@@ -99,7 +150,8 @@ unsigned char gb_setup_end=0;
 
 unsigned char gb_use_send_game_part=0;
 #ifdef use_lib_mini_test
- unsigned char gb_use_game_part= 1; //proteccion
+ //unsigned char gb_use_game_part= 1; //proteccion
+ unsigned char gb_use_game_part= 2;
 #else
  unsigned char gb_use_game_part= 2; //2 bypass protection
 #endif 
@@ -614,6 +666,138 @@ void read_keyboard()
 
 
 
+#ifdef use_lib_esp32sound
+ void IRAM_ATTR onTimerSoundDAC()
+ {
+  //Para DAC   
+  if (gb_spk_data_r != gb_spk_data_r_before)
+  {
+   //dac_output_voltage(DAC_CHANNEL_1, gb_spk_data_r);
+    
+   //CLEAR_PERI_REG_MASK(SENS_SAR_DAC_CTRL2_REG, SENS_DAC_CW_EN1_M);
+   SET_PERI_REG_BITS(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_DAC, gb_spk_data_r, RTC_IO_PDAC1_DAC_S);   //dac_output
+    
+   //    //En ESP32S2 es base + 0x0120 y en esp32 base+0x009C sens_reg.h y soc.h
+   //    #define SENS_SAR_DAC_CTRL2_REG          (DR_REG_SENS_BASE + 0x0120)
+   //    #define SENS_DAC_CW_EN1_M  (BIT(24))
+   //    //CLEAR_PERI_REG_MASK(SENS_SAR_DAC_CTRL2_REG, SENS_DAC_CW_EN1_M);
+   //    SET_PERI_REG_BITS(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_DAC, gb_spk_data, RTC_IO_PDAC1_DAC_S);   //dac_output              
+
+   gb_spk_data_r_before= gb_spk_data_r;
+  }
+
+  gb_spk_data_r= gb_dac_buf_r[gb_dac_read];
+  gb_dac_read++;
+  //gb_dac_read= gb_dac_read & 0x07FF; //2048
+  if (gb_dac_read>2047)
+  {
+   gb_dac_read=0;
+  }
+
+  //gb_dac_read= gb_dac_read & 0xFF;
+  //gb_dac_read= gb_dac_read & 0x7FFF; //32768
+ 
+  //gb_dac_read= gb_dac_read & 0x7FF;
+   
+  //gb_dac_read++;
+  //if(gb_dac_read>=max_dac_buffer)
+  //{
+  // gb_dac_read=0;
+  //}   
+  //   return;
+ }
+
+
+ #ifdef use_lib_esp32sound_mono_channel
+ //Reproducir WAVE RAW
+  void IRAM_ATTR GeneraRAW()
+  {//Solo 1 canal
+   unsigned char valor;
+   unsigned int pos;
+
+   for (unsigned char i=0;i<64;i++)
+   {          
+    if (gb_snd_play[0]==1) 
+    {          
+     pos= gb_snd_pos_cur[0];
+     valor= gb_snd_data[0][pos];
+     pos++;
+   
+     if (pos>=(gb_snd_len[0]-1))
+     {
+      pos=0;
+      gb_snd_play[0]=0;
+      valor=0x80; //silencio
+     }
+     gb_snd_pos_cur[0]= pos;     
+    }
+    else
+    {     
+     valor= 0x80;
+    }    
+        
+    if (valor!=0x80)
+    {
+     valor= valor+0x80;
+    }    
+      
+    gb_dac_buf_r[gb_dac_write++]= ((valor==0)||(valor==0x80))?0x80:valor;
+    gb_dac_write= gb_dac_write & 0x7FF;
+   }
+  } 
+ #else
+ void IRAM_ATTR GeneraRAW()
+ {
+  //valor 0x00 - 0x7F --> 0x80+valor
+  //valor 0x80 - 0xFF --> valor-0x80
+  //255 127
+  //251 123    
+  unsigned char valor;
+  unsigned int pos;
+  int signo;
+  int media;
+
+ 
+  for (unsigned char i=0;i<64;i++)
+  {
+   media=0;
+   for (unsigned char j=0;j<4;j++)
+   {
+    if (gb_snd_play[j]==1) 
+    {          
+     pos= gb_snd_pos_cur[j];
+     valor= gb_snd_data[j][pos];
+     signo= (valor<0x80)?(int)valor:-(int)((unsigned char)(valor-0x80));
+     pos++;
+   
+     if (pos>=(gb_snd_len[j]-1))
+     {
+      pos=0;
+      gb_snd_play[j]=0;
+      signo=0;
+     }
+     gb_snd_pos_cur[j]= pos;     
+    }
+    else
+    {
+     signo=0;
+    }
+        
+    if (signo!=0){
+     media= (media+signo)>>1;
+    }
+   }//fin for j
+      
+   valor= (media>=0)? (0x80+media): 0x80;
+
+   gb_dac_buf_r[gb_dac_write++]= valor;
+   gb_dac_write= gb_dac_write & 0x7FF;
+  }//fin for i
+ }
+ #endif
+#endif
+
+
 
 
 void setup() 
@@ -631,6 +815,33 @@ void setup()
  delay(100);
  Serial.printf("keyboard %d\r\n", ESP.getFreeHeap());
 
+ 
+ #ifdef use_lib_esp32sound
+  memset((void *)gb_snd_play,0,sizeof(gb_snd_play));  
+
+  memset(gb_dac_buf_r,0x80,sizeof(gb_dac_buf_r));
+  dac_output_enable(DAC_CHANNEL_1);
+  //dac_output_voltage(DAC_CHANNEL_1, 0x7f); //Evita llamar CLEAR_PERI_REG_MASK
+  CLEAR_PERI_REG_MASK(SENS_SAR_DAC_CTRL2_REG, SENS_DAC_CW_EN1_M);
+  SET_PERI_REG_BITS(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_DAC, 0x7f, RTC_IO_PDAC1_DAC_S);
+
+  gb_timerSound= timerBegin(0, 80, true); 
+  timerAttachInterrupt(gb_timerSound, &onTimerSoundDAC, true);
+  gb_timerRellenoSonido= timerBegin(1, 80, true);
+  timerAttachInterrupt(gb_timerRellenoSonido, &GeneraRAW, true);  
+
+  timerAlarmWrite(gb_timerSound, 125, true); //1000000 1 segundo  125 es 8000 hz
+  timerAlarmWrite(gb_timerRellenoSonido, 8000, true); //1000000 1 segundo  8 ms
+
+  Serial.printf("Wait\r\n");
+  GeneraRAW(); //Relleno 8 primeros ms
+  timerAlarmEnable(gb_timerRellenoSonido); //Lo arranco despues de rellenar buffer
+  delay(8);
+  Serial.printf("Init Play WAV\r\n");
+  timerAlarmEnable(gb_timerSound); //Lo arranco despues de rellenar buffer
+ #endif
+
+
  for (unsigned char i=0;i<4;i++)
  {
   gb_vram[i]= (unsigned char *)malloc(32000);
@@ -640,24 +851,21 @@ void setup()
  if(psramInit())
  {
   Serial.println("\nPSRAM is correctly initialized");
+  Serial.printf("HEAP %d\r\n", ESP.getFreeHeap());
+
+  gb_memory = (unsigned char *)ps_malloc(614400);
+
+  Serial.printf("gb_memory %d\r\n", ESP.getFreeHeap());
+
+  //e = new Engine(stub, ".", ".");
+  //Serial.printf("new Engine %d\r\n", ESP.getFreeHeap());
+
+  ActivarVideoPorTeclas();
  }
  else
  {
   Serial.println("PSRAM not available");
  }
-
- Serial.printf("HEAP %d\r\n", ESP.getFreeHeap());
-
- gb_memory = (unsigned char *)ps_malloc(614400);
-
- Serial.printf("gb_memory %d\r\n", ESP.getFreeHeap());
-
-
- //e = new Engine(stub, ".", ".");
- //Serial.printf("new Engine %d\r\n", ESP.getFreeHeap());
-
-
- ActivarVideoPorTeclas();
 
  
  Serial.printf("END Setup %d\r\n", ESP.getFreeHeap());

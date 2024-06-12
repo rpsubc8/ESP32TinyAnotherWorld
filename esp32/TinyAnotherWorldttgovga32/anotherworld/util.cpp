@@ -25,7 +25,7 @@
 
 
 //uint16_t g_debugMask=DBG_INFO; // DBG_VM | DBG_BANK | DBG_VIDEO | DBG_SER | DBG_SND;
-unsigned short int g_debugMask= DBG_RES ; //JJ uint16_t g_debugMask= DBG_RES ;
+unsigned short int g_debugMask= 0; //DBG_RES ; //JJ uint16_t g_debugMask= DBG_RES ;
 
 //JJ void debug(uint16_t cm, const char *msg, ...) 
 void debug(unsigned short int cm, const char *msg, ...)

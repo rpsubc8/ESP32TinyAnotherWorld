@@ -8,6 +8,15 @@
  
 //extern FILE * gb_log;
 
+ #ifdef use_lib_esp32sound
+  //extern volatile unsigned char gb_snd_cont; //contador canales
+  extern volatile unsigned char gb_snd_play[4];
+  extern volatile unsigned char * gb_snd_data[4];
+  extern volatile unsigned short int gb_snd_len[4];
+  extern volatile unsigned short int gb_snd_pos_loop[4];
+  extern volatile unsigned short int gb_snd_pos_cur[4];
+ #endif
+
  extern volatile unsigned char gb_keymap[32];
 
  extern unsigned char * gb_vram[4]; //4 buffer video en SRAM

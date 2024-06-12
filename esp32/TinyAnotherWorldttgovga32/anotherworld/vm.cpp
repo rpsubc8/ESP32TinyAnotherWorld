@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#include "gbConfig.h"
 #include "gbGlobals.h"
 #include "main.h"
 
@@ -342,7 +343,9 @@ void VirtualMachine::op_blitFramebuffer() {
 	if ((aux_time_fps - gb_fps_time_ini)>=999)
 	{
      //printf("FPS:%d %d %d %d\n",gb_fps,gb_fps_time_ini,aux_time_fps,(aux_time_fps - gb_fps_time_ini));
-     Serial.printf("FPS:%d sleep:%d\r\n",gb_fps,timeToSleep);
+	 #ifdef use_log_fps_show
+      Serial.printf("FPS:%d sleep:%d\r\n",gb_fps,timeToSleep);
+	 #endif 
      //fflush(stdout);
                            
      gb_fps_time_ini= aux_time_fps;     
@@ -723,7 +726,9 @@ void VirtualMachine::inp_handleSpecialKeys() {
 
 }
 
-void VirtualMachine::snd_playSound(uint16_t resNum, uint8_t freq, uint8_t vol, uint8_t channel) {
+//void VirtualMachine::snd_playSound(uint16_t resNum, uint8_t freq, uint8_t vol, uint8_t channel) {
+void VirtualMachine::snd_playSound(unsigned short int resNum, unsigned char freq, unsigned char vol, unsigned char channel) 
+{
 
 	//debug(DBG_SND, "snd_playSound(0x%X, %d, %d, %d)", resNum, freq, vol, channel);
 	//printf("snd_playSound(0x%X, %d, %d, %d)\n", resNum, freq, vol, channel);
@@ -732,12 +737,17 @@ void VirtualMachine::snd_playSound(uint16_t resNum, uint8_t freq, uint8_t vol, u
 	MemEntry *me = &res->_memList[resNum];
 
 	if (me->state != MEMENTRY_STATE_LOADED)
+	{
 		return;
+	}
 
 	
-	if (vol == 0) {
+	if (vol == 0) 
+	{
 		mixer->stopChannel(channel);
-	} else {
+	} 
+	else 
+	{
 		MixerChunk mc;
 		memset(&mc, 0, sizeof(mc));
 		mc.data = me->bufPtr + 8; // skip header
@@ -753,7 +763,30 @@ void VirtualMachine::snd_playSound(uint16_t resNum, uint8_t freq, uint8_t vol, u
          //fflush(stdout);
          return;
         }
-		mixer->playChannel(channel & 3, &mc, frequenceTable[freq], MIN(vol, 0x3F));
+
+        #ifdef use_lib_esp32sound
+         unsigned char canal= (channel & 3);		 
+		 //gb_snd_cont++;
+		 //if (gb_snd_cont>1)
+		 //{
+		 // gb_snd_cont=0;
+		 //}
+		 //unsigned char canal= gb_snd_cont;
+		 #ifdef use_lib_esp32sound_mono_channel
+		  canal= 0; //fuerza todo a un solo canal
+		 #endif 
+		 gb_snd_play[canal]=0; //Lo paro
+         gb_snd_data[canal]= (unsigned char *)mc.data;
+         gb_snd_len[canal]= mc.len;
+         gb_snd_pos_loop[canal]= mc.loopPos;
+         gb_snd_pos_cur[canal]=0;
+         gb_snd_play[canal]=1; //Se activa, suena         
+		 #ifdef use_log_snd_playSound
+          Serial.printf("Sound ESP32 ch:%d len:%d pos:%d\r\n",canal,gb_snd_len[canal],gb_snd_pos_loop[canal]);         
+		 #endif 
+        #else		
+		 mixer->playChannel(channel & 3, &mc, frequenceTable[freq], MIN(vol, 0x3F));
+		#endif 
 	}
 	
 }

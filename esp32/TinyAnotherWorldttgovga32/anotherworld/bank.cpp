@@ -28,7 +28,7 @@
   //banco 1,2 intro
   //13,12,6 para nivel piscina 
   #include "databank01.h"
-  //#include "databank02.h"
+  #include "databank02.h"
   //#include "databank06.h"
   //#include "databank0c.h"
   //#include "databank0d.h"
@@ -70,7 +70,7 @@ Bank::Bank(const char *dataDir)
   switch (banco)
   {
    case 1: ptr= gb_bank01_bin; break;
-   //case 2: ptr= gb_bank02_bin; break;
+   case 2: ptr= gb_bank02_bin; break;
    //case 6: ptr= gb_bank06_bin; break;
    //case 0x0C: ptr= gb_bank0c_bin; break;
    //case 0x0D: ptr= gb_bank0d_bin; break;   

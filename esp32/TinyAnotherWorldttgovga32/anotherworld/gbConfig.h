@@ -4,8 +4,10 @@
  //Use data file from dataflash
  #define use_lib_dataflash
  
- //Use sdl sound
- //#define use_lib_sdlsound
+ //Use sound esp32
+ #define use_lib_esp32sound
+ //Use only one channel
+ #define use_lib_esp32sound_mono_channel
  
  //usar bitluni scanline pointer
  #define use_lib_bitlunivga
@@ -39,7 +41,7 @@
  #define use_lib_log_serial
 
 
- //keyboard
+ //keyboard remote UART
  //#define use_lib_keyboard_uart 
 
  //timeout read millis
@@ -48,6 +50,11 @@
  //log keyboard serial
  //#define use_lib_log_keyboard_uart
 
+
+ //Logs
+ //#define use_log_readEntriesFlash
+ //#define use_log_fps_show
+ //#define use_log_snd_playSound
 
  //Version de pruebas minimos datos de prueba
  //#define use_lib_mini_test

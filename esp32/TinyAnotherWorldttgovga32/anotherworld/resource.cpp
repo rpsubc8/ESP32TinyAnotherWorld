@@ -129,7 +129,9 @@ int resourceUnitStats[7][2];
   int resourceCounter = 0;
   unsigned int addrFile=0;
   
-  Serial.printf("readEntriesFlash BEGIN\r\n");
+  #ifdef use_log_readEntriesFlash
+   Serial.printf("readEntriesFlash BEGIN\r\n");
+  #endif 
   //fflush(stdout);
   
   //Prepare stats array
@@ -138,7 +140,9 @@ int resourceUnitStats[7][2];
 
   _numMemList = 0;
   MemEntry *memEntry = _memList;
-  printf("_numMemList:%d ARRAYSIZE(_memList):%d Size memlist:%d\n",_numMemList,ARRAYSIZE(_memList),gb_memlist_bin_size);
+  #ifdef use_log_readEntriesFlash
+   Serial.printf("_numMemList:%d ARRAYSIZE(_memList):%d Size memlist:%d\n",_numMemList,ARRAYSIZE(_memList),gb_memlist_bin_size);
+  #endif 
 
   while (1)
   {
@@ -159,14 +163,18 @@ int resourceUnitStats[7][2];
    
    if (memEntry->state == MEMENTRY_STATE_END_OF_MEMLIST) 
    {
-    Serial.printf("break MEMENTRY_STATE_END_OF_MEMLIST\r\n");
+    #ifdef use_log_readEntriesFlash
+     Serial.printf("break MEMENTRY_STATE_END_OF_MEMLIST\r\n");
+    #endif 
     //fflush(stdout);
     break;
    }
   
    if (addrFile>=gb_memlist_bin_size)
    {
-    Serial.printf("break end file\r\n");
+    #ifdef use_log_readEntriesFlash     
+     Serial.printf("break end file\r\n");
+    #endif 
     //fflush(stdout);                                     
     break;
    }
@@ -187,13 +195,15 @@ int resourceUnitStats[7][2];
    resourceSizeStats[STATS_TOTAL_SIZE][RES_SIZE] += memEntry->size;
    resourceSizeStats[memEntry->type][RES_COMPRESSED] += memEntry->packedSize;
    resourceSizeStats[STATS_TOTAL_SIZE][RES_COMPRESSED] += memEntry->packedSize;
-   				
-   Serial.printf("R:0x%02X, %-17s size=%5d (compacted gain=%2.0f%%)\r\n",
-    resourceCounter,
-    resTypeToString(memEntry->type),
-    memEntry->size,
-    memEntry->size ? (memEntry->size-memEntry->packedSize) / (float)memEntry->size * 100.0f : 0.0f);
-   //fflush(stdout);
+
+   #ifdef use_log_readEntriesFlash   				
+    Serial.printf("R:0x%02X, %-17s size=%5d (compacted gain=%2.0f%%)\r\n",
+     resourceCounter,
+     resTypeToString(memEntry->type),
+     memEntry->size,
+     memEntry->size ? (memEntry->size-memEntry->packedSize) / (float)memEntry->size * 100.0f : 0.0f);
+    //fflush(stdout);
+   #endif 
 
    resourceCounter++;
 
@@ -202,8 +212,10 @@ int resourceUnitStats[7][2];
   }
   
   
-  Serial.printf("readEntriesFlash END\r\n");
-  //fflush(stdout);
+  #ifdef use_log_readEntriesFlash
+   Serial.printf("readEntriesFlash END\r\n");   
+   //fflush(stdout);
+  #endif 
  }
 #else
 /*

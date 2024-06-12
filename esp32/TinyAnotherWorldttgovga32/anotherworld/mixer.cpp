@@ -49,7 +49,10 @@ void Mixer::init()
 {
  memset(_channels, 0, sizeof(_channels));
  _mutex = sys->createMutex();
- sys->startAudio(Mixer::mixCallback, this);
+ #ifdef use_lib_esp32sound
+ #else
+  sys->startAudio(Mixer::mixCallback, this);
+ #endif 
 }
 
 void Mixer::free() 
