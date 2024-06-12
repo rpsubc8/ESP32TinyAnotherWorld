@@ -16,5 +16,5 @@ Very preliminary version.
  <li><b>key a:</b> fast speed</li>
  <li><b>key b:</b> normal speed</li>
  <li><b>keys (0..9):</b> load part game</li>
- <li>No sound (coming soon)</li>
+ <li>BASIC sound DAC GPIO 25</li>
 </ul>
