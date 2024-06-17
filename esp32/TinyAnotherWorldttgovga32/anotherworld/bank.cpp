@@ -23,29 +23,33 @@
 #include <Arduino.h> //Para serial
 
 #ifdef use_lib_dataflash
- #ifdef use_lib_mini_test
-  //Necesitamos banco 1 proteccion
-  //banco 1,2 intro
-  //13,12,6 para nivel piscina 
+ #ifdef use_lib_ultra_mini_test
   #include "databank01.h"
-  #include "databank02.h"
-  //#include "databank06.h"
-  //#include "databank0c.h"
-  //#include "databank0d.h"
- #else
-  #include "databank01.h"
-  #include "databank02.h"
-  #include "databank03.h"
-  #include "databank04.h"
-  #include "databank05.h"
-  #include "databank06.h"
-  #include "databank07.h"
-  #include "databank08.h"
-  #include "databank09.h"
-  #include "databank0a.h"
-  #include "databank0b.h"
-  #include "databank0c.h"
-  #include "databank0d.h"
+ #else 
+  #ifdef use_lib_mini_test
+   //Necesitamos banco 1 proteccion
+   //banco 1,2 intro
+   //13,12,6 para nivel piscina 
+   #include "databank01.h"
+   #include "databank02.h"
+   //#include "databank06.h"
+   //#include "databank0c.h"
+   //#include "databank0d.h"
+  #else
+   #include "databank01.h"
+   #include "databank02.h"
+   #include "databank03.h"
+   #include "databank04.h"
+   #include "databank05.h"
+   #include "databank06.h"
+   #include "databank07.h"
+   #include "databank08.h"
+   #include "databank09.h"
+   #include "databank0a.h"
+   #include "databank0b.h"
+   #include "databank0c.h"
+   #include "databank0d.h"
+  #endif 
  #endif 
 #endif 
 
@@ -66,40 +70,50 @@ Bank::Bank(const char *dataDir)
   //Serial.printf("Bank::readFlash %d\n",banco);
   //fflush(stdout);
 
- #ifdef use_lib_mini_test   
-  switch (banco)
-  {
-   case 1: ptr= gb_bank01_bin; break;
-   case 2: ptr= gb_bank02_bin; break;
-   //case 6: ptr= gb_bank06_bin; break;
-   //case 0x0C: ptr= gb_bank0c_bin; break;
-   //case 0x0D: ptr= gb_bank0d_bin; break;   
-   default: 
-    Serial.printf("banco no reconocido %d\r\n",banco);
-    //fflush(stdout);
-    break;   
-  } 
+ #ifdef use_lib_ultra_mini_test
+   switch (banco)
+   {
+    case 1: ptr= gb_bank01_bin; break;    
+    default: 
+     Serial.printf("banco no reconocido %d\r\n",banco);     
+     break;   
+   }  
  #else
-  switch (banco)
-  {
-   case 1: ptr= gb_bank01_bin; break;
-   case 2: ptr= gb_bank02_bin; break;
-   case 3: ptr= gb_bank03_bin; break;
-   case 4: ptr= gb_bank04_bin; break;
-   case 5: ptr= gb_bank05_bin; break;
-   case 6: ptr= gb_bank06_bin; break;   
-   case 7: ptr= gb_bank07_bin; break;   
-   case 8: ptr= gb_bank08_bin; break;
-   case 9: ptr= gb_bank09_bin; break;
-   case 0x0A: ptr= gb_bank0a_bin; break;   
-   case 0x0B: ptr= gb_bank0b_bin; break;   
-   case 0x0C: ptr= gb_bank0c_bin; break;   
-   case 0x0D: ptr= gb_bank0d_bin; break;   
-   default: 
-    Serial.printf("banco no reconocido %d\n",banco);
-    //fflush(stdout);
-    break;   
-  }
+  #ifdef use_lib_mini_test   
+   switch (banco)
+   {
+    case 1: ptr= gb_bank01_bin; break;
+    case 2: ptr= gb_bank02_bin; break;
+    //case 6: ptr= gb_bank06_bin; break;
+    //case 0x0C: ptr= gb_bank0c_bin; break;
+    //case 0x0D: ptr= gb_bank0d_bin; break;   
+    default: 
+     Serial.printf("banco no reconocido %d\r\n",banco);
+     //fflush(stdout);
+     break;   
+   } 
+  #else
+   switch (banco)
+   {
+    case 1: ptr= gb_bank01_bin; break;
+    case 2: ptr= gb_bank02_bin; break;
+    case 3: ptr= gb_bank03_bin; break;
+    case 4: ptr= gb_bank04_bin; break;
+    case 5: ptr= gb_bank05_bin; break;
+    case 6: ptr= gb_bank06_bin; break;   
+    case 7: ptr= gb_bank07_bin; break;   
+    case 8: ptr= gb_bank08_bin; break;
+    case 9: ptr= gb_bank09_bin; break;
+    case 0x0A: ptr= gb_bank0a_bin; break;   
+    case 0x0B: ptr= gb_bank0b_bin; break;   
+    case 0x0C: ptr= gb_bank0c_bin; break;   
+    case 0x0D: ptr= gb_bank0d_bin; break;   
+    default: 
+     Serial.printf("banco no reconocido %d\n",banco);
+     //fflush(stdout);
+     break;   
+   }
+  #endif 
  #endif 
  
   if (me->packedSize == me->size) 

@@ -23,18 +23,24 @@
 
 
  //Video mode boot (select only one option)
- //This option is not yet available 
- //#define use_lib_boot_vga_360x200x70hz_bitluni_6bpp
+ #define use_lib_boot_vga_360x200x70hz_bitluni_6bpp
  //#define use_lib_boot_vga_360x200x70hz_bitluni_apll_6bpp
  //#define use_lib_boot_vga_320x200x70hz_bitluni_6bpp
  //#define use_lib_boot_vga_320x200x70hz_fabgl_6bpp
  //#define use_lib_boot_vga_320x200x70hz_bitluni_apll_6bpp
  //#define use_lib_boot_vga_320x240x60hz_bitluni_6bpp
  //#define use_lib_boot_vga_320x240x60hz_fabgl_6bpp
- //#define use_lib_boot_vga_320x240x60hz_bitluni_apll_6bpp 
+ //#define use_lib_boot_vga_320x240x60hz_bitluni_apll_6bpp
+ //#define use_lib_boot_vga_512x384x60hz_fabgl_6bpp
 
  //Time to select video mode at startup (ms)
  #define use_lib_boot_time_select_vga 500
+
+
+
+ //4 buffer videos in psram o sram
+ //use_lib_video4buffers_psram
+
 
 
  //log trace
@@ -42,7 +48,7 @@
 
 
  //keyboard remote UART
- //#define use_lib_keyboard_uart 
+ //#define use_lib_keyboard_uart
 
  //timeout read millis
  #define use_lib_keyboard_uart_timeout 0
@@ -57,7 +63,83 @@
  //#define use_log_snd_playSound
 
  //Version de pruebas minimos datos de prueba
+ //#define use_lib_ultra_mini_test
  //#define use_lib_mini_test
+
+
+
+
+
+
+
+
+
+
+ #ifdef use_lib_boot_vga_512x384x60hz_fabgl_6bpp
+  //512x384 force use PSRAM to free SRAM
+  #ifndef use_lib_video4buffers_psram
+   #define use_lib_video4buffers_psram
+  #endif 
+ #endif
+
+
+ #ifdef use_lib_boot_vga_360x200x70hz_bitluni_6bpp
+  //360-320= 40 DIV 2= 20 DIV 4 = 5
+  #define use_lib_offset_x 5
+  #define use_lib_offset_y 0
+  #define use_lib_video 8
+ #else
+  #ifdef use_lib_boot_vga_360x200x70hz_bitluni_apll_6bpp
+   #define use_lib_offset_x 5
+   #define use_lib_offset_y 0
+   #define use_lib_video 9
+  #else 
+   #ifdef use_lib_boot_vga_320x200x70hz_bitluni_6bpp
+    #define use_lib_offset_x 0
+    #define use_lib_offset_y 0
+    #define use_lib_video 10
+   #else
+    #ifdef use_lib_boot_vga_320x200x70hz_fabgl_6bpp 
+     #define use_lib_offset_x 0
+     #define use_lib_offset_y 0
+     #define use_lib_video 11
+    #else 
+     #ifdef use_lib_boot_vga_320x200x70hz_bitluni_apll_6bpp
+      #define use_lib_offset_x 0
+      #define use_lib_offset_y 0     
+      #define use_lib_video 12
+     #else
+      #ifdef use_lib_boot_vga_320x240x60hz_bitluni_6bpp
+       #define use_lib_offset_x 0
+       #define use_lib_offset_y 20      
+       #define use_lib_video 13
+      #else 
+       #ifdef use_lib_boot_vga_320x240x60hz_fabgl_6bpp
+        #define use_lib_offset_x 0
+        #define use_lib_offset_y 20             
+        #define use_lib_video 14
+       #else 
+        #ifdef use_lib_boot_vga_320x240x60hz_bitluni_apll_6bpp
+         #define use_lib_offset_x 0
+         #define use_lib_offset_y 20                     
+         #define use_lib_video 15
+        #else 
+         #ifdef use_lib_boot_vga_512x384x60hz_fabgl_6bpp
+          #define use_lib_offset_x 24
+          #define use_lib_offset_y 92
+          #define use_lib_video 16
+         #endif
+        #endif
+       #endif
+      #endif
+     #endif
+    #endif
+   #endif
+  #endif
+ #endif
+
+
+
 
 #endif
 

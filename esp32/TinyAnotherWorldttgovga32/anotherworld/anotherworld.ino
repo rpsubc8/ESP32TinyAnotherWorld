@@ -149,12 +149,16 @@ unsigned char gb_vga_8colors=0; //1 8 colores, 0 64 colores
 unsigned char gb_setup_end=0;
 
 unsigned char gb_use_send_game_part=0;
-#ifdef use_lib_mini_test
- //unsigned char gb_use_game_part= 1; //proteccion
- unsigned char gb_use_game_part= 2;
+#ifdef use_lib_ultra_mini_test
+ unsigned char gb_use_game_part= 1; //proteccion
 #else
- unsigned char gb_use_game_part= 2; //2 bypass protection
-#endif 
+ #ifdef use_lib_mini_test
+  //unsigned char gb_use_game_part= 1; //proteccion
+  unsigned char gb_use_game_part= 2;
+ #else
+  unsigned char gb_use_game_part= 2; //2 bypass protection
+ #endif
+#endif
 unsigned char gb_use_speed_fast=0;
 unsigned int gb_real_vga_time_ini=0;
 
@@ -292,7 +296,15 @@ void ActivarVideoPorTeclas()
  unsigned int p2=0;
  unsigned int p3=0; 
 
- unsigned char video=10;
+ //unsigned char video=10; //320x200 use_lib_bitlunivga 6bpp
+ //unsigned char video=13; //320x240 use_lib_bitlunivga 6bpp
+ //unsigned char video=69;  //512x384 use_lib_bitlunivga 6bpp
+
+ unsigned char video= use_lib_video;
+
+ //unsigned char video= 8;  //360x200x70hz_bitluni_6bpp
+ //unsigned char video=9;  //360x200x70hz_bitluni_6bpp
+ //unsigned char video=16;  //512x384 use_lib_bitlunivga 6bpp
 
 /*
  unsigned int tiempo_ahora;
@@ -359,6 +371,9 @@ void ActivarVideoPorTeclas()
    case 13:gb_vga_videomode_cur= 5; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=0; usecustompll=0; break;
    case 14:gb_vga_videomode_cur= 6; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=1; p0=0x000A; p1=0x0057; p2=0x0007; p3=0x0007; usecustompll=0; break;
    case 15:gb_vga_videomode_cur= 7; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=0; usecustompll=1; break;   
+
+
+   case 16:gb_vga_videomode_cur= 7; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_512x384fabgl; usepllcteforce=1; p0=0x0000; p1=0x00C0; p2=0x0005; p3=0x0001; usecustompll=0; break; //512x384fabgl
    default: break;
   }
 
@@ -844,7 +859,11 @@ void setup()
 
  for (unsigned char i=0;i<4;i++)
  {
-  gb_vram[i]= (unsigned char *)malloc(32000);
+  #ifdef use_lib_video4buffers_psram
+   gb_vram[i]= (unsigned char *)ps_malloc(32000);
+  #else
+   gb_vram[i]= (unsigned char *)malloc(32000);
+  #endif
  }
  Serial.printf("vram 4 buffers %d\r\n", ESP.getFreeHeap());
 
@@ -861,15 +880,16 @@ void setup()
   //Serial.printf("new Engine %d\r\n", ESP.getFreeHeap());
 
   ActivarVideoPorTeclas();
+  
+  gb_setup_end= 1;
  }
  else
  {
   Serial.println("PSRAM not available");
+  gb_setup_end= 0;
  }
 
- 
  Serial.printf("END Setup %d\r\n", ESP.getFreeHeap());
- gb_setup_end= 1;
 }
 
 void loop() 
@@ -889,4 +909,5 @@ void loop()
 
   Serial.printf("END loop\r\n");
  }
+ delay(100);
 }

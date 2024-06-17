@@ -55,6 +55,13 @@ const unsigned int VgaMode_vga_mode_400x300[12]={
 };
 
 
+//512x384 800x600x60 fabgl se ve en hdmi y capturadora
+const unsigned int VgaMode_vga_mode_512x384fabgl[12]={
+ //sdm0:0000 sdm1:00C0 sdm2:0005 o_div:0001  
+ 12,68,80,512,1,3,15,768,2,32500000,1,1 //funciona en hdmi capturadora y 
+};
+
+
 
 //const int VgaMode_vga_mode_360x350[12]={
 // 8,54,28,360,11,2,32,350,1,14161000,1,1 
