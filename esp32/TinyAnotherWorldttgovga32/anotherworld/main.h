@@ -18,9 +18,13 @@
  #ifdef use_lib_keyboard_uart
   void do_keyboard_uart(void);
   void keyboard_uart_poll(void);
+  unsigned char checkKey_uart(unsigned char scancode);
  #endif
 
  void read_keyboard(void);
+ void PrepareColorsBitluniVGA(void);
+ void ResetPaleta16(void);
+ void ForcePSRAMVideo(void);
 
  //void Setup(void);
  //void PreparaBitluniVGA(void);

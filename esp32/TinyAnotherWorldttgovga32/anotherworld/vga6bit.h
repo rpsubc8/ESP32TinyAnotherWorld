@@ -16,6 +16,7 @@
 #define video_mode_vga320x240x60hz_bitluni 5
 #define video_mode_vga320x240x60hz_fabgl 6
 #define video_mode_vga320x240x60hz_bitluni_apll_fix 7
+#define video_mode_vga512x384x60hz_fabgl 8
 
 
 //JJ class VgaMode;

@@ -192,6 +192,7 @@ void SDLStub::setPalette(const unsigned char *p)
     
   //gb_paleta16[i]= (b<<4)|(g<<2)|r; //indice  
   gb_paleta16[i]= gb_const_colorNormal[((b<<4)|(g<<2)|r)]; //color directo
+  gb_paleta16_id[i]= ((b<<4)|(g<<2)|r); //Solo el id sin sync
 
 //JJ     palette[i].a = 0xFF; // convertir SDL1
   p += 2;
@@ -240,7 +241,7 @@ void SDLStub::prepareGfxMode()
   //Llama video->updateDisplay(pageId); con tiempos
   
   unsigned short int height = SCREEN_H;
-  unsigned short int y= use_lib_offset_y; //unsigned short int y=0;
+  unsigned short int y= gb_use_lib_offset_y; //unsigned short int y=0;
   unsigned char a0,a1,a2,a3,aux;
   unsigned int a32;
   unsigned int contOrig=0;
@@ -262,8 +263,8 @@ void SDLStub::prepareGfxMode()
    // gb_buffer_vga[y][((i * 2) + 1)^2]= gb_paleta16[(*(src + i) & 0xF)];    
    //}
 
-   iIni= use_lib_offset_x;
-   iFin= use_lib_offset_x+80;
+   iIni= gb_use_lib_offset_x;
+   iFin= gb_use_lib_offset_x+80;
    //for (unsigned int i = 0; i<80; i++)
    for (unsigned int i = iIni; i<iFin; i++)
    {

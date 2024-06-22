@@ -23,6 +23,7 @@
 #include "gbConfig.h"
 #include "hardware.h"
 #include "gbGlobals.h"
+#include "osd.h"
 #include "PS2Kbd.h"
 #include "vga6bit.h"
 #include "main.h"
@@ -91,6 +92,18 @@
  void IRAM_ATTR GeneraRAW(void); 
 #endif
 
+unsigned char gb_forcePSRAMused=0;
+unsigned char gb_key_video[9]; //Modos de video inicio
+
+volatile unsigned char gb_snd_shift=0;
+
+
+unsigned short int gb_use_lib_offset_x= use_lib_offset_x;
+unsigned short int gb_use_lib_offset_y= use_lib_offset_y;
+unsigned short int gb_use_lib_video= use_lib_video;
+unsigned short int gb_use_lib_width= use_lib_width;
+unsigned short int gb_use_lib_height= use_lib_height;
+
 unsigned char gb_use_keyb_left=0;
 unsigned char gb_use_keyb_right=0;
 unsigned char gb_use_keyb_up=0;
@@ -113,6 +126,26 @@ unsigned char gb_do_action_key_show_osd=0; //Muestra fps
 #else 
  unsigned char gb_use_debug=0;
 #endif 
+
+unsigned int gb_ramfree_ini;
+unsigned int gb_ramfree_setupEnd;
+
+unsigned char gb_use_keyb_poll_ms= 10; //10 ms poll keyboard
+unsigned int gb_keyb_poll_time_cur=0;
+unsigned int gb_keyb_poll_time_prev=0;
+
+unsigned char gb_use_vga_poll_ms= 20; //20 ms poll vga
+unsigned int gb_vga_poll_time_cur= 0;
+unsigned int gb_vga_poll_time_prev= 0;
+
+unsigned char gb_show_osd_main_menu=0;
+unsigned char gb_language_en=1;
+unsigned char gb_id_menu_cur=0;
+
+short int gb_osd_ventana_ini=0;
+short int gb_osd_ventana_fin=15;
+
+unsigned char gb_vga_videomode_cur_menu= use_lib_video; //El que seleccionas en menu OSD
 
 
  const unsigned char pin_config8[] = {  
@@ -138,11 +171,16 @@ unsigned char gb_do_action_key_show_osd=0; //Muestra fps
 
 unsigned char * gb_vram[4]; //4 buffer video en SRAM
 unsigned char * gb_memory; //614400 bytes global memory engine
+unsigned char * _pages[4];
+unsigned char *_curPagePtr1, *_curPagePtr2, *_curPagePtr3;
 
 unsigned char gb_paleta16[16];
+unsigned char gb_paleta16_id[16]; //Identificador sin BBGGRR
 
-const unsigned int *gb_ptrVideo_cur= VgaMode_vga_mode_320x200;
-unsigned char gb_vga_videomode_cur= video_mode_vga320x200x70hz_bitluni; //2
+const unsigned int *gb_ptrVideo_cur= VgaMode_vga_mode_360x200; //VgaMode_vga_mode_320x200;
+unsigned char gb_vga_videomode_cur= video_mode_360x200x70hz_bitluni; //0 //video_mode_vga320x200x70hz_bitluni; //2
+unsigned short int gb_vga_ancho= 360; //320;
+unsigned short int gb_vga_alto= 200;
 
 unsigned char gb_vga_8colors=0; //1 8 colores, 0 64 colores
 
@@ -280,7 +318,13 @@ void PrepareColorsBitluniVGA()
  }
 
  //memset(gb_paleta16,0,16); //incide color
+ //memset(gb_paleta16,gb_const_colorNormal[0],16); //color directo
+}
+
+void ResetPaleta16()
+{
  memset(gb_paleta16,gb_const_colorNormal[0],16); //color directo
+ memset(gb_paleta16_id,0,16);
 }
 
 
@@ -301,27 +345,24 @@ void ActivarVideoPorTeclas()
  //unsigned char video=69;  //512x384 use_lib_bitlunivga 6bpp
 
  unsigned char video= use_lib_video;
-
+ gb_vga_ancho= use_lib_width;
+ gb_vga_alto= use_lib_height;
  //unsigned char video= 8;  //360x200x70hz_bitluni_6bpp
  //unsigned char video=9;  //360x200x70hz_bitluni_6bpp
  //unsigned char video=16;  //512x384 use_lib_bitlunivga 6bpp
 
-/*
  unsigned int tiempo_ahora;
  unsigned int tiempo_antes;
- unsigned char video=255;
- #ifdef use_lib_ram_8KB
-  unsigned short int auxAddr= 0x2000-8192;
- #else
-  unsigned short int auxAddr= 0x2000;
- #endif
- 
+ //unsigned char video=255;
+  
  tiempo_antes= tiempo_ahora= millis();
  
  while ((tiempo_ahora-tiempo_antes)<use_lib_boot_time_select_vga)
  {
   tiempo_ahora= millis();
 
+  memset(gb_key_video,0xFF,sizeof(gb_key_video));
+  
   read_keyboard();
   #ifdef use_lib_keyboard_uart
    keyboard_uart_poll();
@@ -329,51 +370,43 @@ void ActivarVideoPorTeclas()
    do_keyboard_uart();
   #endif
 
-  if (gb_Kmap[32]== 0) {video=0;} //0
-  if (gb_Kmap[33]== 0) {video=1;} //1
-  if (gb_Kmap[34]== 0) {video=2;} //2
-  if (gb_Kmap[35]== 0) {video=3;} //3
-  if (gb_Kmap[36]== 0) {video=4;} //4
-  if (gb_Kmap[37]== 0) {video=5;} //5               
-  if (gb_Kmap[38]== 0) {video=6;} //6
-  if (gb_Kmap[39]== 0) {video=7;} //7 //fin modos 3 bpp
-
-  if (gb_Kmap[40]== 0) {video=8;} //8
-  if (gb_Kmap[41]== 0) {video=9;} //9
-  if (gb_Kmap[1]== 0) {video=10;} //A
-  if (gb_Kmap[2]== 0) {video=11;} //B
-  if (gb_Kmap[3]== 0) {video=12;} //C
-  if (gb_Kmap[4]== 0) {video=13;} //D
-  if (gb_Kmap[5]== 0) {video=14;} //E
-  if (gb_Kmap[6]== 0) {video=15;} //F
+  if (gb_key_video[0]== 0) {video=0;} //0  360x200x70hz bitluni(6bpp)
+  if (gb_key_video[1]== 0) {video=1;} //1  360x200x70hz bitluni apll(6bpp
+  if (gb_key_video[2]== 0) {video=2;} //2  320x200x70hz bitluni(6bpp)
+  if (gb_key_video[3]== 0) {video=3;} //3  320x200x70hz fabgl(6bpp)
+  if (gb_key_video[4]== 0) {video=4;} //4  320x200x70hz bitluni apll(6bpp)
+  if (gb_key_video[5]== 0) {video=5;} //5  320x240x60hz bitluni(6bpp)           
+  if (gb_key_video[6]== 0) {video=6;} //6  320x240x60hz fabgl(6bpp)
+  if (gb_key_video[7]== 0) {video=7;} //7  320x240x60hz bitluni apll(6bpp)
+  if (gb_key_video[8]== 0) {video=8;} //8  512x384x60hz fabgl(6bpp)
  }
- */
+ 
 
  if (video!=255)
  {//Cambio modo video
   if (gb_use_debug==1){ Serial.printf("Video mode change\r\n"); }
   switch (video)
   {
-   case 0: gb_vga_videomode_cur= 0; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_360x200; usepllcteforce=0; usecustompll=0; break; //360x200x70hz bitluni(3bpp)
-   case 1: gb_vga_videomode_cur= 1; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_360x200; usepllcteforce=0; usecustompll=1; break; //360x200x70hz bitluni apll(3bpp)
-   case 2: gb_vga_videomode_cur= 2; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_320x200; usepllcteforce=0; usecustompll=0; break; //320x200x70hz bitluni(3bpp)
-   case 3: gb_vga_videomode_cur= 3; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_320x200; usepllcteforce=1; p0=0x00AE; p1=0x00CF; p2=0x0004; p3=0x0005; usecustompll=0; break; //320x200x70hz fabgl(3bpp)
-   case 4: gb_vga_videomode_cur= 4; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_320x200; usepllcteforce=0; usecustompll=1; break; //320x200x70hz bitluni apll(3bpp)
-   case 5: gb_vga_videomode_cur= 5; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=0; usecustompll=0; break; //320x240x60hz bitluni(3bpp)
-   case 6: gb_vga_videomode_cur= 6; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=1; p0=0x000A; p1=0x0057; p2=0x0007; p3=0x0007; usecustompll=0; break; //320x240x60hz fabgl(3bpp)
-   case 7: gb_vga_videomode_cur= 7; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=0; usecustompll=1; break; //320x240x60hz bitluni apll(3bpp)
+   //case 0: gb_vga_videomode_cur= 0; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_360x200; usepllcteforce=0; usecustompll=0; break; //360x200x70hz bitluni(3bpp)
+   //case 1: gb_vga_videomode_cur= 1; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_360x200; usepllcteforce=0; usecustompll=1; break; //360x200x70hz bitluni apll(3bpp)
+   //case 2: gb_vga_videomode_cur= 2; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_320x200; usepllcteforce=0; usecustompll=0; break; //320x200x70hz bitluni(3bpp)
+   //case 3: gb_vga_videomode_cur= 3; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_320x200; usepllcteforce=1; p0=0x00AE; p1=0x00CF; p2=0x0004; p3=0x0005; usecustompll=0; break; //320x200x70hz fabgl(3bpp)
+   //case 4: gb_vga_videomode_cur= 4; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_320x200; usepllcteforce=0; usecustompll=1; break; //320x200x70hz bitluni apll(3bpp)
+   //case 5: gb_vga_videomode_cur= 5; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=0; usecustompll=0; break; //320x240x60hz bitluni(3bpp)
+   //case 6: gb_vga_videomode_cur= 6; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=1; p0=0x000A; p1=0x0057; p2=0x0007; p3=0x0007; usecustompll=0; break; //320x240x60hz fabgl(3bpp)
+   //case 7: gb_vga_videomode_cur= 7; is8colors=1; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=0; usecustompll=1; break; //320x240x60hz bitluni apll(3bpp)
 
-   case 8: gb_vga_videomode_cur= 0; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_360x200; usepllcteforce=0; usecustompll=0; break;
-   case 9: gb_vga_videomode_cur= 1; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_360x200; usepllcteforce=0; usecustompll=1; break;
-   case 10:gb_vga_videomode_cur= 2; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x200; usepllcteforce=0; usecustompll=0; break;
-   case 11:gb_vga_videomode_cur= 3; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x200; usepllcteforce=1; p0=0x00AE; p1=0x00CF; p2=0x0004; p3=0x0005; usecustompll=0; break;
-   case 12:gb_vga_videomode_cur= 4; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x200; usepllcteforce=0; usecustompll=1; break;
-   case 13:gb_vga_videomode_cur= 5; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=0; usecustompll=0; break;
-   case 14:gb_vga_videomode_cur= 6; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=1; p0=0x000A; p1=0x0057; p2=0x0007; p3=0x0007; usecustompll=0; break;
-   case 15:gb_vga_videomode_cur= 7; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=0; usecustompll=1; break;   
+   case 0: gb_vga_videomode_cur= 0; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_360x200; usepllcteforce=0; usecustompll=0; gb_vga_ancho= 360; gb_vga_alto=200; break;
+   case 1: gb_vga_videomode_cur= 1; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_360x200; usepllcteforce=0; usecustompll=1; gb_vga_ancho= 360; gb_vga_alto=200; break;
+   case 2: gb_vga_videomode_cur= 2; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x200; usepllcteforce=0; usecustompll=0; gb_vga_ancho= 320; gb_vga_alto=200; break;
+   case 3: gb_vga_videomode_cur= 3; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x200; usepllcteforce=1; p0=0x00AE; p1=0x00CF; p2=0x0004; p3=0x0005; usecustompll=0; gb_vga_ancho= 320; gb_vga_alto=200; break;
+   case 4: gb_vga_videomode_cur= 4; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x200; usepllcteforce=0; usecustompll=1; gb_vga_ancho= 320; gb_vga_alto=200; break;
+   case 5: gb_vga_videomode_cur= 5; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=0; usecustompll=0; gb_vga_ancho= 320; gb_vga_alto=240; break;
+   case 6: gb_vga_videomode_cur= 6; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=1; p0=0x000A; p1=0x0057; p2=0x0007; p3=0x0007; usecustompll=0; gb_vga_ancho= 320; gb_vga_alto=240; break;
+   case 7: gb_vga_videomode_cur= 7; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_320x240; usepllcteforce=0; usecustompll=1; gb_vga_ancho= 320; gb_vga_alto=240; break;   
 
 
-   case 16:gb_vga_videomode_cur= 7; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_512x384fabgl; usepllcteforce=1; p0=0x0000; p1=0x00C0; p2=0x0005; p3=0x0001; usecustompll=0; break; //512x384fabgl
+   case 8: gb_vga_videomode_cur= 8; is8colors=0; gb_ptrVideo_cur= VgaMode_vga_mode_512x384fabgl; usepllcteforce=1; p0=0x0000; p1=0x00C0; p2=0x0005; p3=0x0001; usecustompll=0; gb_vga_ancho= 512; gb_vga_alto=384; break; //512x384fabgl
    default: break;
   }
 
@@ -385,12 +418,23 @@ void ActivarVideoPorTeclas()
 
 //   OSDUpdateAnchoAltoVGA(gb_vga_videomode_cur,is8colors);//Set is8colors gb_vga_8colors
 
+ OSDUpdateAnchoAltoVGA(video,is8colors);
+
+ #ifdef use_lib_video4buffers_psram
+ #else
+  if (video==8)
+  {//Si elijo modo 512x384 que requiere PSRAM, libero SRAM y fuerzo PSRAM
+   ForcePSRAMVideo();
+  }
+ #endif 
+
    //vga_init(pin_config,VgaMode_vga_mode_320x240,false,0,0,0,0,0,0);
    vga_init((is8colors==1)?pin_config8:pin_config64,gb_ptrVideo_cur,false,usepllcteforce,p0,p1,p2,p3,usecustompll,is8colors, gb_vga_videomode_cur);
    gb_sync_bits= vga_get_sync_bits();
    gb_buffer_vga = vga_get_framebuffer();
    gb_buffer_vga32=(unsigned int **)gb_buffer_vga;
    PrepareColorsBitluniVGA(); //Llamar despues de tener gb_sync_bits  
+   ResetPaleta16(); //Resetea paleta emulador, todo a negro   
 }
 
 
@@ -480,8 +524,9 @@ void ActivarVideoPorTeclas()
      //case 0x2E: aux_Kmap[46]= 0; break; //.
 
 
-     case 0x61: case 0x41: gb_use_speed_fast=1; break; //A equivale F10 Rapido
-     case 0x62: case 0x42: gb_use_speed_fast=0; break; //B equivale F11 Lento
+     //La velocidad se hace desde OSD
+     //case 0x61: case 0x41: gb_use_speed_fast=1; break; //A equivale F10 Rapido
+     //case 0x62: case 0x42: gb_use_speed_fast=0; break; //B equivale F11 Lento
 
 /*
      case 0x63: case 0x43: aux_Kmap[3]= 0; gb_Kmap[3]= 0; break; //C
@@ -513,16 +558,29 @@ void ActivarVideoPorTeclas()
      case 0x20: gb_use_keyb_space= 1; break; //SPACE    
       
 
-     case 0x30: gb_use_game_part= 10; gb_use_send_game_part= 1; break; //0
-     case 0x31: gb_use_game_part= 1; gb_use_send_game_part= 1; break; //1
-     case 0x32: gb_use_game_part= 2; gb_use_send_game_part= 1; break; //2
-     case 0x33: gb_use_game_part= 3; gb_use_send_game_part= 1; break; //3
-     case 0x34: gb_use_game_part= 4; gb_use_send_game_part= 1; break; //4
-     case 0x35: gb_use_game_part= 5; gb_use_send_game_part= 1; break; //5               
-     case 0x36: gb_use_game_part= 6; gb_use_send_game_part= 1; break; //6
-     case 0x37: gb_use_game_part= 7; gb_use_send_game_part= 1; break; //7     
-     case 0x38: gb_use_game_part= 8; gb_use_send_game_part= 1; break; //8
-     case 0x39: gb_use_game_part= 9; gb_use_send_game_part= 1; break; //9
+     //Modos de video inicio provional
+     case 0x30: gb_key_video[0]=0; break; //0
+     case 0x31: gb_key_video[1]=0; break; //1
+     case 0x32: gb_key_video[2]=0; break; //2
+     case 0x33: gb_key_video[3]=0; break; //3
+     case 0x34: gb_key_video[4]=0; break; //4
+     case 0x35: gb_key_video[5]=0; break; //5               
+     case 0x36: gb_key_video[6]=0; break; //6
+     case 0x37: gb_key_video[7]=0; break; //7     
+     case 0x38: gb_key_video[8]=0; break; //8     
+
+
+     //La carga de nivel se hace por OSD
+     //case 0x30: gb_use_game_part= 10; gb_use_send_game_part= 1; break; //0
+     //case 0x31: gb_use_game_part= 1; gb_use_send_game_part= 1; break; //1
+     //case 0x32: gb_use_game_part= 2; gb_use_send_game_part= 1; break; //2
+     //case 0x33: gb_use_game_part= 3; gb_use_send_game_part= 1; break; //3
+     //case 0x34: gb_use_game_part= 4; gb_use_send_game_part= 1; break; //4
+     //case 0x35: gb_use_game_part= 5; gb_use_send_game_part= 1; break; //5               
+     //case 0x36: gb_use_game_part= 6; gb_use_send_game_part= 1; break; //6
+     //case 0x37: gb_use_game_part= 7; gb_use_send_game_part= 1; break; //7     
+     //case 0x38: gb_use_game_part= 8; gb_use_send_game_part= 1; break; //8
+     //case 0x39: gb_use_game_part= 9; gb_use_send_game_part= 1; break; //9
 
 
      default: break;
@@ -656,6 +714,24 @@ void read_keyboard()
  gb_use_keyb_space= checkKey(PS2_KC_SPACE); //SPACE
  gb_use_keyb_return= checkKey(PS2_KC_ENTER); //RETURN
 
+
+ if (checkKey(PS2_KC_0)==1){ gb_key_video[0]=0; }  //0
+ if (checkKey(PS2_KC_1)==1){ gb_key_video[1]=0; }  //1
+ if (checkKey(PS2_KC_2)==1){ gb_key_video[2]=0; }  //2
+ if (checkKey(PS2_KC_3)==1){ gb_key_video[3]=0; }  //3
+ if (checkKey(PS2_KC_4)==1){ gb_key_video[4]=0; }  //4
+ if (checkKey(PS2_KC_5)==1){ gb_key_video[5]=0; }  //5               
+ if (checkKey(PS2_KC_6)==1){ gb_key_video[6]=0; }  //6
+ if (checkKey(PS2_KC_7)==1){ gb_key_video[7]=0; }  //7     
+ if (checkKey(PS2_KC_8)==1){ gb_key_video[8]=0; }  //8
+ if (checkKey(PS2_KC_9)==1){ gb_key_video[9]=0; }  //9 
+
+ if (checkKey(KEY_F1)==1)
+ {
+  gb_do_action_key_f1= 1;
+ }
+
+
  //pulso= checkKey(PS2_KEY_0);
  //if (pulso==1)
  //{
@@ -663,19 +739,21 @@ void read_keyboard()
  // Serial.printf("0\r\n");
  //} //0
 
- if (checkKey(PS2_KC_0)==1){ gb_use_game_part= 10; gb_use_send_game_part= 1;}  //10
- if (checkKey(PS2_KC_1)==1){ gb_use_game_part= 1; gb_use_send_game_part= 1; }  //1
- if (checkKey(PS2_KC_2)==1){ gb_use_game_part= 2; gb_use_send_game_part= 1; }  //2
- if (checkKey(PS2_KC_3)==1){ gb_use_game_part= 3; gb_use_send_game_part= 1; }  //3
- if (checkKey(PS2_KC_4)==1){ gb_use_game_part= 4; gb_use_send_game_part= 1; }  //4
- if (checkKey(PS2_KC_5)==1){ gb_use_game_part= 5; gb_use_send_game_part= 1; }  //5               
- if (checkKey(PS2_KC_6)==1){ gb_use_game_part= 6; gb_use_send_game_part= 1; }  //6
- if (checkKey(PS2_KC_7)==1){ gb_use_game_part= 7; gb_use_send_game_part= 1; }  //7     
- if (checkKey(PS2_KC_8)==1){ gb_use_game_part= 8; gb_use_send_game_part= 1; }  //8
- if (checkKey(PS2_KC_9)==1){ gb_use_game_part= 9; gb_use_send_game_part= 1; }  //9 
+ //La carga de nivel se hace por OSD
+ //if (checkKey(PS2_KC_0)==1){ gb_use_game_part= 10; gb_use_send_game_part= 1;}  //10
+ //if (checkKey(PS2_KC_1)==1){ gb_use_game_part= 1; gb_use_send_game_part= 1; }  //1
+ //if (checkKey(PS2_KC_2)==1){ gb_use_game_part= 2; gb_use_send_game_part= 1; }  //2
+ //if (checkKey(PS2_KC_3)==1){ gb_use_game_part= 3; gb_use_send_game_part= 1; }  //3
+ //if (checkKey(PS2_KC_4)==1){ gb_use_game_part= 4; gb_use_send_game_part= 1; }  //4
+ //if (checkKey(PS2_KC_5)==1){ gb_use_game_part= 5; gb_use_send_game_part= 1; }  //5               
+ //if (checkKey(PS2_KC_6)==1){ gb_use_game_part= 6; gb_use_send_game_part= 1; }  //6
+ //if (checkKey(PS2_KC_7)==1){ gb_use_game_part= 7; gb_use_send_game_part= 1; }  //7     
+ //if (checkKey(PS2_KC_8)==1){ gb_use_game_part= 8; gb_use_send_game_part= 1; }  //8
+ //if (checkKey(PS2_KC_9)==1){ gb_use_game_part= 9; gb_use_send_game_part= 1; }  //9 
 
- if (checkKey(PS2_KC_A)==1){ gb_use_speed_fast=1; } //A equivale F10 Rapido
- if (checkKey(PS2_KC_B)==1){ gb_use_speed_fast=0; } //B equivale F11 Lento
+ //La velocidad se hace desde OSD
+ //if (checkKey(PS2_KC_A)==1){ gb_use_speed_fast=1; } //A equivale F10 Rapido
+ //if (checkKey(PS2_KC_B)==1){ gb_use_speed_fast=0; } //B equivale F11 Lento
  
 }
 
@@ -730,6 +808,16 @@ void read_keyboard()
    unsigned char valor;
    unsigned int pos;
 
+   if (gb_snd_shift==4)
+   {//Silencio
+    for (unsigned char i=0;i<64;i++)
+    {
+     gb_dac_buf_r[gb_dac_write++]= 0x80;
+     gb_dac_write= gb_dac_write & 0x7FF;
+    }
+    return;
+   }
+
    for (unsigned char i=0;i<64;i++)
    {          
     if (gb_snd_play[0]==1) 
@@ -755,7 +843,10 @@ void read_keyboard()
     {
      valor= valor+0x80;
     }    
-      
+
+    valor= (valor>>gb_snd_shift);
+
+    //gb_dac_buf_r[gb_dac_write++]= ((valor==0)||(valor==0x80))?0x80:(valor>>gb_snd_shift);
     gb_dac_buf_r[gb_dac_write++]= ((valor==0)||(valor==0x80))?0x80:valor;
     gb_dac_write= gb_dac_write & 0x7FF;
    }
@@ -813,14 +904,81 @@ void read_keyboard()
 #endif
 
 
+void ForcePSRAMVideo()
+{
+ //El modo 512x384 requiere PSRAM
+ unsigned char *ptrAux;
+ unsigned char idPtr1=0;
+ unsigned char idPtr2=0;
+ unsigned char idPtr3=0;
+ 
+ #ifdef use_lib_log_serial
+  Serial.printf("ForcePSRAMVideo\r\n");
+ #endif
+
+ #ifdef use_lib_video4buffers_psram
+  //Ya tenia los 4 buffer en psram no hago nada
+ #else
+  //Si ya he usado PSRAM, no hago nada
+  if (gb_forcePSRAMused==0)
+  {
+   gb_forcePSRAMused= 1;
+
+   //Busco punteros
+   for (unsigned char i=0;i<4;i++)
+   {
+    if (_curPagePtr1 == _pages[i]){ idPtr1= i; }
+    if (_curPagePtr2 == _pages[i]){ idPtr2= i; }
+    if (_curPagePtr3 == _pages[i]){ idPtr3= i; }    
+   }
+
+   Serial.printf("id1:%d id2:%d id3:%d\r\n",idPtr1,idPtr2,idPtr3);
+
+   //Creo memoria y copio de SRAM a PSRAM
+   for (unsigned char i=0;i<4;i++)
+   {  
+    //Copio en psram
+    ptrAux= (unsigned char *)ps_malloc(32000);
+    if (ptrAux!=NULL)
+    {
+     memcpy(&ptrAux[0],&gb_vram[i][0],32000);
+     Serial.printf("Copy psram %d\r\n",i);
+     free(gb_vram[i]); //libero SRAM
+     Serial.printf("Free psram %d\r\n",i);
+     gb_vram[i]= ptrAux;
+
+     _pages[i] = gb_vram[i];
+    }
+    else
+    {
+     Serial.printf("psram null %d\r\n",i);
+    }
+   }
+
+   //Resturo punteros apuntando a PSRAM
+   _curPagePtr1= _pages[idPtr1];
+   _curPagePtr2= _pages[idPtr2];
+   _curPagePtr3= _pages[idPtr3];
+   Serial.printf("Assign id and pointer Pages\r\n");
+
+  }
+ #endif 
+}
+
 
 
 void setup() 
 {
  gb_setup_end= 0;
- Serial.begin(115200);
- Serial.printf("BEGIN Setup\r\n");
- Serial.printf("HEAP BEGIN %d\r\n", ESP.getFreeHeap());
+ gb_ramfree_ini= ESP.getFreeHeap();
+
+ memset(gb_key_video,0xFF,sizeof(gb_key_video));
+ 
+ #if defined(use_lib_log_serial) || defined(use_lib_keyboard_uart)
+  Serial.begin(115200);
+  Serial.printf("BEGIN Setup\r\n");
+  Serial.printf("HEAP BEGIN %d\r\n", gb_ramfree_ini);
+ #endif 
 
  #ifdef use_lib_keyboard_uart
   Serial.setTimeout(use_lib_keyboard_uart_timeout);
@@ -856,19 +1014,21 @@ void setup()
   timerAlarmEnable(gb_timerSound); //Lo arranco despues de rellenar buffer
  #endif
 
-
- for (unsigned char i=0;i<4;i++)
- {
-  #ifdef use_lib_video4buffers_psram
-   gb_vram[i]= (unsigned char *)ps_malloc(32000);
-  #else
-   gb_vram[i]= (unsigned char *)malloc(32000);
-  #endif
- }
- Serial.printf("vram 4 buffers %d\r\n", ESP.getFreeHeap());
-
  if(psramInit())
  {
+  #ifdef use_lib_video4buffers_psram
+   for (unsigned char i=0;i<4;i++)
+   {
+    gb_vram[i]= (unsigned char *)ps_malloc(32000);
+   }
+  #else
+   for (unsigned char i=0;i<4;i++)
+   {       
+    gb_vram[i]= (unsigned char *)malloc(32000);
+   }
+  #endif
+  Serial.printf("vram 4 buffers %d\r\n", ESP.getFreeHeap());
+
   Serial.println("\nPSRAM is correctly initialized");
   Serial.printf("HEAP %d\r\n", ESP.getFreeHeap());
 
@@ -889,7 +1049,13 @@ void setup()
   gb_setup_end= 0;
  }
 
- Serial.printf("END Setup %d\r\n", ESP.getFreeHeap());
+
+ gb_ramfree_setupEnd= ESP.getFreeHeap();
+ #ifdef use_lib_log_serial  
+  if (gb_use_debug==1){ Serial.printf("END SETUP %d\r\n", gb_ramfree_setupEnd); }
+ #endif 
+
+ //Serial.printf("END Setup %d\r\n", ESP.getFreeHeap());
 }
 
 void loop() 
@@ -909,5 +1075,5 @@ void loop()
 
   Serial.printf("END loop\r\n");
  }
- delay(100);
+ delay(1);
 }

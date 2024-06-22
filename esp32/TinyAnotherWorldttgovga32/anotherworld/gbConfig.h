@@ -39,7 +39,7 @@
 
 
  //4 buffer videos in psram o sram
- //use_lib_video4buffers_psram
+ //#define use_lib_video4buffers_psram
 
 
 
@@ -87,47 +87,65 @@
   //360-320= 40 DIV 2= 20 DIV 4 = 5
   #define use_lib_offset_x 5
   #define use_lib_offset_y 0
-  #define use_lib_video 8
+  #define use_lib_video 0
+  #define use_lib_width 360
+  #define use_lib_height 200
  #else
   #ifdef use_lib_boot_vga_360x200x70hz_bitluni_apll_6bpp
    #define use_lib_offset_x 5
    #define use_lib_offset_y 0
-   #define use_lib_video 9
+   #define use_lib_video 1
+   #define use_lib_width 360
+   #define use_lib_height 200   
   #else 
    #ifdef use_lib_boot_vga_320x200x70hz_bitluni_6bpp
     #define use_lib_offset_x 0
     #define use_lib_offset_y 0
-    #define use_lib_video 10
+    #define use_lib_video 2
+    #define use_lib_width 320
+    #define use_lib_height 200    
    #else
     #ifdef use_lib_boot_vga_320x200x70hz_fabgl_6bpp 
      #define use_lib_offset_x 0
      #define use_lib_offset_y 0
-     #define use_lib_video 11
+     #define use_lib_video 3
+     #define use_lib_width 320
+     #define use_lib_height 200         
     #else 
      #ifdef use_lib_boot_vga_320x200x70hz_bitluni_apll_6bpp
       #define use_lib_offset_x 0
       #define use_lib_offset_y 0     
-      #define use_lib_video 12
+      #define use_lib_video 4
+      #define use_lib_width 320
+      #define use_lib_height 200          
      #else
       #ifdef use_lib_boot_vga_320x240x60hz_bitluni_6bpp
        #define use_lib_offset_x 0
        #define use_lib_offset_y 20      
-       #define use_lib_video 13
+       #define use_lib_video 5
+       #define use_lib_width 320
+       #define use_lib_height 240    
       #else 
        #ifdef use_lib_boot_vga_320x240x60hz_fabgl_6bpp
         #define use_lib_offset_x 0
         #define use_lib_offset_y 20             
-        #define use_lib_video 14
+        #define use_lib_video 6
+        #define use_lib_width 320
+        #define use_lib_height 240            
        #else 
         #ifdef use_lib_boot_vga_320x240x60hz_bitluni_apll_6bpp
          #define use_lib_offset_x 0
          #define use_lib_offset_y 20                     
-         #define use_lib_video 15
+         #define use_lib_video 7
+         #define use_lib_width 320
+         #define use_lib_height 240             
         #else 
          #ifdef use_lib_boot_vga_512x384x60hz_fabgl_6bpp
           #define use_lib_offset_x 24
           #define use_lib_offset_y 92
-          #define use_lib_video 16
+          #define use_lib_video 8
+          #define use_lib_width 512
+          #define use_lib_height 384              
          #endif
         #endif
        #endif

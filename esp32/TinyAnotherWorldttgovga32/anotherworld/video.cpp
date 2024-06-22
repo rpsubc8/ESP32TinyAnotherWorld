@@ -86,7 +86,7 @@ void Video::init()
  {
   //_pages[i] = (unsigned char *)malloc(32000);
   _pages[i] = gb_vram[i];
-  memset(_pages[i],0,32000);
+  memset(_pages[i],0,32000);  
  }
 
 

@@ -26,6 +26,7 @@
 #include "sys.h"
 #include "parts.h"
 #include <Arduino.h>
+#include "osd.h"
 
 Engine::Engine(System *paramSys, const char *dataDir, const char *saveDir)
 	: sys(paramSys), vm(&mixer, &res, &player, &video, sys), mixer(sys), res(&video, dataDir), 
@@ -50,6 +51,7 @@ void Engine::CargaParteJuego(unsigned char apart)
     case 8: part= GAME_PART8; break;
     case 9: part= GAME_PART9; break;
     case 10: part= GAME_PART10; break;
+    case 11: part= GAME_PART_LAST; break;
    }
   
    vm.initForPart(part);     
@@ -63,9 +65,30 @@ void Engine::run()
  
  while (!sys->input.quit) 
  {  
+  if (gb_do_action_key_reset==1)
+  {
+   gb_do_action_key_reset= 0;
+   //sys->input.quit= true;   
+   #ifdef use_lib_ultra_mini_test
+    gb_use_game_part= 1;
+   #else   
+    gb_use_game_part= 2;
+   #endif
+   gb_use_send_game_part= 1;
+  }
+
   vm.checkThreadRequests();
   vm.inp_updatePlayer();
   processInput();
+  
+  //Procesar acciones
+  if (gb_do_action_key_f1==1)
+  {
+   gb_do_action_key_f1=0;
+   gb_show_osd_main_menu= 1;
+   do_tinyOSD();     
+  }
+
   vm.hostFrame();
   
   if (gb_use_send_game_part == 1)

@@ -75,13 +75,13 @@
   System *sys;
 	
   unsigned char paletteIdRequested, currentPaletteId; //JJ uint8_t paletteIdRequested, currentPaletteId;
-  unsigned char *_pages[4]; //JJ uint8_t *_pages[4];
+//JJ global  unsigned char *_pages[4]; //JJ uint8_t *_pages[4];
 
   // I am almost sure that:
   // _curPagePtr1 is the work buffer
   // _curPagePtr2 is the background buffer1
   // _curPagePtr3 is the background buffer2
-  unsigned char *_curPagePtr1, *_curPagePtr2, *_curPagePtr3; //JJ uint8_t *_curPagePtr1, *_curPagePtr2, *_curPagePtr3;
+//JJ globales  unsigned char *_curPagePtr1, *_curPagePtr2, *_curPagePtr3; //JJ uint8_t *_curPagePtr1, *_curPagePtr2, *_curPagePtr3;
 
   Polygon polygon;
   short int _hliney; //JJ int16_t _hliney;
