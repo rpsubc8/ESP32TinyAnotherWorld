@@ -96,6 +96,11 @@ unsigned char gb_forcePSRAMused=0;
 unsigned char gb_key_video[9]; //Modos de video inicio
 
 volatile unsigned char gb_snd_shift=0;
+#ifdef use_lib_esp32sound_mono_channel
+ volatile unsigned char gb_sound_mono_channel=1;
+#else
+ volatile unsigned char gb_sound_mono_channel=0;
+#endif 
 
 
 unsigned short int gb_use_lib_offset_x= use_lib_offset_x;
@@ -801,12 +806,14 @@ void read_keyboard()
  }
 
 
- #ifdef use_lib_esp32sound_mono_channel
+// #ifdef use_lib_esp32sound_mono_channel
  //Reproducir WAVE RAW
   void IRAM_ATTR GeneraRAW()
-  {//Solo 1 canal
+  {//Pendiente de optimizar
    unsigned char valor;
    unsigned int pos;
+   int i0,i1,i2,i3,iSum;
+   unsigned char a[4];
 
    if (gb_snd_shift==4)
    {//Silencio
@@ -818,39 +825,82 @@ void read_keyboard()
     return;
    }
 
-   for (unsigned char i=0;i<64;i++)
-   {          
-    if (gb_snd_play[0]==1) 
+   if (gb_sound_mono_channel==1)
+   {//Un solo canal   
+    for (unsigned char i=0;i<64;i++)
     {          
-     pos= gb_snd_pos_cur[0];
-     valor= gb_snd_data[0][pos];
-     pos++;
+     if (gb_snd_play[0]==1) 
+     {          
+      pos= gb_snd_pos_cur[0];
+      valor= gb_snd_data[0][pos];
+      pos++;
    
-     if (pos>=(gb_snd_len[0]-1))
-     {
-      pos=0;
-      gb_snd_play[0]=0;
-      valor=0x80; //silencio
+      if (pos>=(gb_snd_len[0]-1))
+      {
+       pos=0;
+       gb_snd_play[0]=0;
+       valor=0x80; //silencio
+      }
+      gb_snd_pos_cur[0]= pos;     
      }
-     gb_snd_pos_cur[0]= pos;     
-    }
-    else
-    {     
-     valor= 0x80;
-    }    
+     else
+     {     
+      valor= 0x80;
+     }    
         
-    if (valor!=0x80)
+     if (valor!=0x80)
+     {
+      valor= valor+0x80;
+     }    
+
+     valor= (valor>>gb_snd_shift);
+
+     //gb_dac_buf_r[gb_dac_write++]= ((valor==0)||(valor==0x80))?0x80:(valor>>gb_snd_shift);
+     gb_dac_buf_r[gb_dac_write++]= ((valor==0)||(valor==0x80))?0x80:valor;
+     gb_dac_write= gb_dac_write & 0x7FF;
+    }
+   }
+   else
+   {
+    //4 canales
+    for (unsigned char i=0;i<64;i++)
     {
-     valor= valor+0x80;
-    }    
+     a[0]=a[1]=a[2]=a[3]=0;
+     for (unsigned char j=0;j<4;j++)
+     {
+      if (gb_snd_play[j]==1) 
+      {          
+       pos= gb_snd_pos_cur[j];
+       a[j]= gb_snd_data[j][pos];
+       pos++;
 
-    valor= (valor>>gb_snd_shift);
-
-    //gb_dac_buf_r[gb_dac_write++]= ((valor==0)||(valor==0x80))?0x80:(valor>>gb_snd_shift);
-    gb_dac_buf_r[gb_dac_write++]= ((valor==0)||(valor==0x80))?0x80:valor;
-    gb_dac_write= gb_dac_write & 0x7FF;
+       if (pos>=(gb_snd_len[j]-1))
+       {
+        pos=0;
+        gb_snd_play[j]=0;       
+       }
+       gb_snd_pos_cur[j]= pos;       
+      }
+     } //fin for j
+    
+     if (a[0]>0x80){ i0= (int)(a[0]-256); } else {i0= a[0];}
+     if (a[1]>0x80){ i1= (int)(a[1]-256); } else {i1= a[1];}
+     if (a[2]>0x80){ i2= (int)(a[2]-256); } else {i2= a[2];}
+     if (a[3]>0x80){ i3= (int)(a[3]-256); } else {i3= a[3];}
+   
+     iSum= i0+i1+i2+i3;
+     if (iSum>127) {iSum=127;}
+     else
+     {
+      if(iSum<-127) {iSum=-127;}
+     }
+          
+     gb_dac_buf_r[gb_dac_write++]= ((iSum+0x80)>>gb_snd_shift);
+     gb_dac_write= gb_dac_write & 0x7FF;
+    }//fin for i
    }
   } 
+/*  
  #else
  void IRAM_ATTR GeneraRAW()
  {
@@ -901,6 +951,7 @@ void read_keyboard()
   }//fin for i
  }
  #endif
+*/ 
 #endif
 
 

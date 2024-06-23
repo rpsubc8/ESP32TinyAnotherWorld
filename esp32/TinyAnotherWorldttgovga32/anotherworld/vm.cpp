@@ -765,16 +765,16 @@ void VirtualMachine::snd_playSound(unsigned short int resNum, unsigned char freq
         }
 
         #ifdef use_lib_esp32sound
-         unsigned char canal= (channel & 3);		 
+         unsigned char canal= (gb_sound_mono_channel==1)?0:(channel & 3);
 		 //gb_snd_cont++;
 		 //if (gb_snd_cont>1)
 		 //{
 		 // gb_snd_cont=0;
 		 //}
 		 //unsigned char canal= gb_snd_cont;
-		 #ifdef use_lib_esp32sound_mono_channel
-		  canal= 0; //fuerza todo a un solo canal
-		 #endif 
+		 //#ifdef use_lib_esp32sound_mono_channel
+		 // canal= 0; //fuerza todo a un solo canal
+		 //#endif 
 		 gb_snd_play[canal]=0; //Lo paro
          gb_snd_data[canal]= (unsigned char *)mc.data;
          gb_snd_len[canal]= mc.len;

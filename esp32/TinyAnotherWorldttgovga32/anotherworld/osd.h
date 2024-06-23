@@ -22,9 +22,11 @@
   #define id_menu_debug 11
   #define id_menu_help 12
   #define id_menu_reset 13
-  #define id_menu_intercepttape 14
-  #define id_menu_ram 15
-  #define id_menu_about 16
+  #define id_menu_sound_options 14  
+   #define id_menu_sound_volumen 15
+   #define id_menu_sound_channel 16
+  #define id_menu_ram 17
+  #define id_menu_about 18
   
 
 
@@ -95,6 +97,18 @@ static const char * gb_sound_menu[max_gb_sound_menu]={
  "50",
  "25",
  "0"
+};
+
+#define max_gb_sound_channel_menu 2
+static const char * gb_sound_channel_menu[max_gb_sound_channel_menu]={
+ "4 (multi)",
+ "1 (mono)"
+};
+
+#define max_gb_sound_options_menu 2
+static const char * gb_sound_options_menu[max_gb_sound_options_menu]={
+ "Level (volumen)",
+ "Channel (canal)"
 };
 
 
@@ -234,7 +248,7 @@ static const char * gb_help_menu_en[max_gb_help_menu]={
 
 #define max_gb_about_menu 13
 static const char * gb_about_menu_sp[max_gb_about_menu]={
- "Fecha de publicado: 2024/06/22",
+ "Fecha de publicado: 2024/06/23",
  "",
  "Port del emulador Another World, realizado",
  "por ackerman, basado en x86 Neo-raw Another",
@@ -246,10 +260,10 @@ static const char * gb_about_menu_sp[max_gb_about_menu]={
  "VGA 6 bpp",
  "Cambio modo video en inicio o en caliente",
  "Teclado PS/2",
- "Volumen de Sonido regulable"
+ "Volumen de Sonido regulable (4 canales)"
 };
 static const char * gb_about_menu_en[max_gb_about_menu]={
- "Date Published: 2024/06/22",
+ "Date Published: 2024/06/23",
  "",
  "Port of the emulator Another World, made",
  "by ackerman,based on x86 Neo-raw Another's",
@@ -261,7 +275,7 @@ static const char * gb_about_menu_en[max_gb_about_menu]={
  "VGA 6 bpp",
  "Switch video mode on startup or hot run",
  "PS/2 keyboard",
- "Adjustable sound volume"
+ "Adjustable sound volume (4 channel)"
 };
 
 
@@ -3387,7 +3401,9 @@ const unsigned char gb_sdl_font_6x8[] = {
  void ShowTinyResetMenu(void);
  void ShowTinyAboutMenu(void);
  void ShowTinyHelpMenu(void);
- void ShowTinySoundOptionsMenu(void); 
+ void ShowTinySoundOptionsMenu(void);
+ void ShowTinySoundVolumenMenu(void);
+ void ShowTinySoundChannelMenu(void); 
  void ShowTinyVideoFilterMenu(void);
  void ShowTinyRAM(void);
  void OSDSubir(unsigned char idSel);

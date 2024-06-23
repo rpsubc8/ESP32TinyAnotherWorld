@@ -7,6 +7,7 @@
 // #include <stdio.h> 
  
 //extern FILE * gb_log;
+ extern volatile unsigned char gb_sound_mono_channel;
 
  extern unsigned char gb_forcePSRAMused;
 

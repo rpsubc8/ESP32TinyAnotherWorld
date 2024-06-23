@@ -1018,7 +1018,7 @@ void ShowTinyMainMenu()
   case 7: gb_id_menu_cur= id_menu_debug; break;
   case 8: gb_id_menu_cur= id_menu_help; break;
   case 9: gb_id_menu_cur= id_menu_reset; break;
-  case 10: gb_id_menu_cur= id_menu_intercepttape; break;
+  case 10: gb_id_menu_cur= id_menu_sound_options; break;
   case 11: gb_id_menu_cur= id_menu_ram; break;
   case 12: gb_id_menu_cur= id_menu_about; break;
   default: break;
@@ -1612,6 +1612,67 @@ void ShowTinyResetMenu()
 //********************************************************************************************
 void ShowTinySoundOptionsMenu()
 {
+ unsigned char aSelNum;
+
+ if (gb_language_en==1)
+ {
+  aSelNum = ShowTinyMenu("   SOUND ", (char **)gb_sound_options_menu ,0,max_gb_sound_options_menu);
+ }
+ else
+ {
+  aSelNum = ShowTinyMenu("  SONIDO ", (char **)gb_sound_options_menu,0,max_gb_sound_options_menu);
+ }
+
+ if (aSelNum == 255)
+ {//Pulsa ESC vuelve a menu anterior Main menu
+  gb_id_menu_cur= id_menu_main;
+  return;
+ }
+ 
+ switch(aSelNum)
+ {
+  case 0: gb_id_menu_cur= id_menu_sound_volumen; break;
+  case 1: gb_id_menu_cur= id_menu_sound_channel; break;
+ }
+
+ //gb_show_osd_main_menu=0;
+}
+
+//********************************************************************************************
+void ShowTinySoundChannelMenu()
+{
+ unsigned char aSelNum;
+ unsigned char pos;
+
+ pos= (gb_sound_mono_channel==1)?1:0;
+
+ if (gb_language_en==1)
+ {
+  aSelNum = ShowTinyMenu(" CHANNEL ", (char **)gb_sound_channel_menu,pos,max_gb_sound_channel_menu);
+ }
+ else
+ {
+  aSelNum = ShowTinyMenu("  CANAL  ", (char **)gb_sound_channel_menu,pos,max_gb_sound_channel_menu);
+ }
+
+ if (aSelNum == 255)
+ {//Pulsa ESC vuelve a menu anterior Main menu
+  gb_id_menu_cur= id_menu_main;
+  return;
+ }
+
+ switch(aSelNum)
+ {
+  case 0: gb_sound_mono_channel= 0; break; //4 canales
+  case 1: gb_sound_mono_channel= 1; break; //1 solo canal
+ }
+
+ gb_show_osd_main_menu=0;
+}
+
+//********************************************************************************************
+void ShowTinySoundVolumenMenu()
+{
    
  unsigned char aSelNum;
  unsigned char pos=0;
@@ -1741,7 +1802,9 @@ void do_tinyOSD()
     case id_menu_debug: ShowTinyDebugMenu(); break;
     case id_menu_help: ShowTinyHelpMenu(); break;
     case id_menu_reset: ShowTinyResetMenu(); break;
-    case id_menu_intercepttape: ShowTinySoundOptionsMenu(); break;
+    case id_menu_sound_options: ShowTinySoundOptionsMenu(); break;
+    case id_menu_sound_volumen: ShowTinySoundVolumenMenu(); break;
+    case id_menu_sound_channel: ShowTinySoundChannelMenu(); break;
     case id_menu_ram: ShowTinyRAM(); break;
     case id_menu_about: ShowTinyAboutMenu(); break;    
     default: break;

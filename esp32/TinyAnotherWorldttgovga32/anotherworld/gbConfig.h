@@ -7,7 +7,7 @@
  //Use sound esp32
  #define use_lib_esp32sound
  //Use only one channel
- #define use_lib_esp32sound_mono_channel
+ //#define use_lib_esp32sound_mono_channel
  
  //usar bitluni scanline pointer
  #define use_lib_bitlunivga
