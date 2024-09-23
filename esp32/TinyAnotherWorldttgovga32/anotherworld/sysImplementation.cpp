@@ -336,6 +336,8 @@ void SDLStub::processEvents()
   do_keyboard_uart();
  #else
   read_keyboard();
+  input.dirMask=0; //fix repeticion de teclas
+  input.button=0;  
  #endif
  
 

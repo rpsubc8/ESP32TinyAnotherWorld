@@ -778,6 +778,7 @@ void VirtualMachine::snd_playSound(unsigned short int resNum, unsigned char freq
 		 gb_snd_play[canal]=0; //Lo paro
          gb_snd_data[canal]= (unsigned char *)mc.data;
          gb_snd_len[canal]= mc.len;
+		 //Serial.printf("canal:%d len:%d\r\n",canal,mc.len);
          gb_snd_pos_loop[canal]= mc.loopPos;
          gb_snd_pos_cur[canal]=0;
          gb_snd_play[canal]=1; //Se activa, suena         

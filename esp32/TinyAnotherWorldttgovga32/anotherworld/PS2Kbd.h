@@ -3,7 +3,6 @@
 
 #include "gbConfig.h"
 #include "hardware.h"
-//#include "keys.h" //Ya no se necesita
 #include <Arduino.h>
 
 
@@ -105,19 +104,14 @@
 
 
 
-//#define KB_INT_START attachInterrupt(digitalPinToInterrupt(KEYBOARD_CLK), kb_interruptHandler, FALLING)
-//#define KB_INT_STOP detachInterrupt(digitalPinToInterrupt(KEYBOARD_CLK))
-
-//extern byte lastcode; //Ya no se necesita
-
 void IRAM_ATTR kb_interruptHandler(void);
 void kb_begin(void);
-//unsigned char isKeymapChanged(void);
+
+
 unsigned char checkAndCleanKey(unsigned char scancode);
 unsigned char checkKey(unsigned char scancode);
 
-// inject key from wiimote, for not modifying OSD code
-//void emulateKeyChange(unsigned char scancode, unsigned char isdown);
+
+void ClearKeyboard(void);
 
 #endif
-

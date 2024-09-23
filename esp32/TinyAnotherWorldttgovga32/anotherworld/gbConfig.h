@@ -6,8 +6,9 @@
  
  //Use sound esp32
  #define use_lib_esp32sound
- //Use only one channel
- //#define use_lib_esp32sound_mono_channel
+ //Use only 1 channel, until the 4-channel mix is optimised, as rare failures occur
+ //Use only one channel.
+ #define use_lib_esp32sound_mono_channel
  
  //usar bitluni scanline pointer
  #define use_lib_bitlunivga
@@ -160,5 +161,3 @@
 
 
 #endif
-
-

@@ -691,6 +691,8 @@ void ActivarVideoPorTeclas()
 #endif
 
 
+unsigned int read_keyboard_time_prev=0;
+unsigned int read_keyboard_time_cur=0;
 void read_keyboard()
 {
  //gb_use_keyb_up=0;
@@ -711,13 +713,13 @@ void read_keyboard()
  //if (checkKey(PS2_KC_0)==1) {Serial.printf("0\r\n"); }
  //if (checkKey(PS2_KC_1)==1) {Serial.printf("1\r\n"); }
 
- gb_use_keyb_up= checkKey(KEY_CURSOR_UP); //arriba
- gb_use_keyb_down= checkKey(KEY_CURSOR_DOWN); //abajo
- gb_use_keyb_left= checkKey(KEY_CURSOR_LEFT); //izquierda
- gb_use_keyb_right= checkKey(KEY_CURSOR_RIGHT); //derecha 
+ gb_use_keyb_up= (checkKey(KEY_CURSOR_UP)==1) ? 1:0; //arriba
+ gb_use_keyb_down= (checkKey(KEY_CURSOR_DOWN)==1)? 1:0; //abajo
+ gb_use_keyb_left= (checkKey(KEY_CURSOR_LEFT)==1)? 1:0; //izquierda
+ gb_use_keyb_right= (checkKey(KEY_CURSOR_RIGHT)==1)? 1:0; //derecha 
 
- gb_use_keyb_space= checkKey(PS2_KC_SPACE); //SPACE
- gb_use_keyb_return= checkKey(PS2_KC_ENTER); //RETURN
+ gb_use_keyb_space= (checkKey(PS2_KC_SPACE)==1)? 1:0; //SPACE
+ gb_use_keyb_return= (checkKey(PS2_KC_ENTER)==1)? 1:0; //RETURN
 
 
  if (checkKey(PS2_KC_0)==1){ gb_key_video[0]=0; }  //0
@@ -731,11 +733,17 @@ void read_keyboard()
  if (checkKey(PS2_KC_8)==1){ gb_key_video[8]=0; }  //8
  if (checkKey(PS2_KC_9)==1){ gb_key_video[9]=0; }  //9 
 
- if (checkKey(KEY_F1)==1)
+ unsigned char gb_use_keyb_f1= (checkKey(KEY_F1)==1)?1:0;
+ if (gb_use_keyb_f1==1)
  {
   gb_do_action_key_f1= 1;
  }
 
+ //unsigned char bitKeys= (gb_use_keyb_f1<<6)|(gb_use_keyb_up<<5)|(gb_use_keyb_down<<4)|(gb_use_keyb_left<<3)|(gb_use_keyb_right<<2)|(gb_use_keyb_space<<1)|gb_use_keyb_return;
+ //read_keyboard_time_cur= millis();
+ //unsigned int auxTime= read_keyboard_time_cur-read_keyboard_time_prev;  
+ //Serial.printf("key:%02X keyb:%d%d%d%d%d%d%d cur:%d dur:%d\r\n",bitKeys,gb_use_keyb_f1,gb_use_keyb_up,gb_use_keyb_down,gb_use_keyb_left,gb_use_keyb_right,gb_use_keyb_space,gb_use_keyb_return, read_keyboard_time_cur,auxTime);
+ //read_keyboard_time_prev= read_keyboard_time_cur;
 
  //pulso= checkKey(PS2_KEY_0);
  //if (pulso==1)
@@ -886,7 +894,7 @@ void read_keyboard()
      if (a[0]>0x80){ i0= (int)(a[0]-256); } else {i0= a[0];}
      if (a[1]>0x80){ i1= (int)(a[1]-256); } else {i1= a[1];}
      if (a[2]>0x80){ i2= (int)(a[2]-256); } else {i2= a[2];}
-     if (a[3]>0x80){ i3= (int)(a[3]-256); } else {i3= a[3];}
+     if (a[3]>0x80){ i3= (int)(a[3]-256); } else {i3= a[3];}     
    
      iSum= i0+i1+i2+i3;
      if (iSum>127) {iSum=127;}

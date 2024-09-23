@@ -808,6 +808,8 @@ unsigned char ShowTinyMenu(char *cadTitle,char **ptrValue,unsigned char idSel,un
  unsigned char salir=0;
  unsigned char auxChange=1;
 
+ ClearKeyboard();
+
  gb_osd_ventana_ini= (idSel<16)? 0: (idSel-15);//idSel;
  gb_osd_ventana_fin= gb_osd_ventana_ini+15; 
  
@@ -991,6 +993,9 @@ unsigned char ShowTinyMenu(char *cadTitle,char **ptrValue,unsigned char idSel,un
 void ShowTinyMainMenu()
 {
  unsigned char aSelNum;
+
+ ClearKeyboard();
+
  if(gb_language_en==1)
  {
   aSelNum = ShowTinyMenu("  MAIN MENU", (char **)gb_main_menu_en, 0 ,max_gb_main_menu);                       
@@ -1779,6 +1784,8 @@ void do_tinyOSD()
  //int auxFrec;
  
  //Serial.printf("do_tinyOSD BEGIN\r\n");
+
+ ClearKeyboard();
 
  if(gb_show_osd_main_menu==1)
  {

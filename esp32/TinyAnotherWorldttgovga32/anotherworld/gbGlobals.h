@@ -47,7 +47,7 @@
   extern volatile unsigned short int gb_snd_pos_cur[4];
  #endif
 
- extern volatile unsigned char gb_keymap[32];
+ //extern volatile unsigned char gb_keymap[32];
  extern unsigned char gb_key_video[9]; //Teclado modos video provisional
 
  extern unsigned char * gb_vram[4]; //4 buffer video en SRAM

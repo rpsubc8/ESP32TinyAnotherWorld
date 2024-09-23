@@ -37,8 +37,8 @@
    DIR_DOWN  = 1 << 3
   };
 
-  unsigned char dirMask; //JJ uint8_t dirMask;
-  bool button;
+  unsigned char dirMask=0; //JJ uint8_t dirMask;
+  bool button=0;
   bool code;
   bool pause;
   bool quit;
