@@ -6,6 +6,14 @@ Very preliminary version.
 
 <center><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyAnotherWorld/main/preview/previewAnotherCar.gif'></center>
 
+<br><br>
+<h1>Fake True Color</h1>
+It's a scaling from 320x200 to 640x400 with 2x2 Bayer dithering.<br>
+<center><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyAnotherWorld/main/preview/previewAnotherFakeColor.gif'></center>
+<center><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyAnotherWorld/main/preview/previewAnotherCarFakeColor.gif'></center>
+
+<br><br>
+<h1>Features</h1>
 <ul>
  <li><b>Video mode:</b>360x200, 320x200, 320x240, 512x384</li>
  <li>RGB 16 bits conversion to BBGGRR 6 bits</li>
@@ -19,6 +27,15 @@ Very preliminary version.
  <li>BASIC sound DAC GPIO 25 (100%, 75%, 50%, 25%, 0)</li>
  <li>Visual Studio 1.48.1 PLATFORMIO 2.2.1 Espressif32 v3.3.2</li>
  <li>Arduino IDE 1.8.11 Espressif System 1.0.6</li>
- <li>ArduinoDroid (6.3.1)</li>
+ <li>ArduinoDroid (6.3.1)</li> 
  <li><b>Precompile version: </b> <a href='https://github.com/rpsubc8/ESP32TinyAnotherWorld/tree/main/esp32/precompile'>https://github.com/rpsubc8/ESP32TinyAnotherWorld/tree/main/esp32/precompile</a></li>
 </ul>
+
+<br><br>
+<h1>Flash fake True Color</h1>
+<center><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyAnotherWorld/main/preview/flash01faketruecolor.gif'></center>
+
+<br><br>
+<h1>Flash fake True Color (combine)</h1>
+<center><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyAnotherWorld/main/preview/flash01combinefaketruecolor.gif'></center>
+
