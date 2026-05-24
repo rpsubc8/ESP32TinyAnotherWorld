@@ -11,6 +11,10 @@ Very preliminary version.
 It's a scaling from 320x200 to 640x400 with 2x2 Bayer dithering.<br>
 <center><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyAnotherWorld/main/preview/previewAnotherFakeColor.gif'></center>
 <center><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyAnotherWorld/main/preview/previewAnotherCarFakeColor.gif'></center>
+<center><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyAnotherWorld/main/preview/previewLevel4FakeColor.gif'></center>
+<center><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyAnotherWorld/main/preview/previewLevel6FakeColor.gif'></center>
+<center><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyAnotherWorld/main/preview/previewLevel7FakeColor.gif'></center>
+<center><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyAnotherWorld/main/preview/previewLevel8FakeColor.gif'></center>
 
 <br><br>
 <h1>Features</h1>
