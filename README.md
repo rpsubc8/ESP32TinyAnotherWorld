@@ -60,7 +60,7 @@ Both at the ESP32 startup (by pressing a key) and in the OSD, you can choose the
 
 | Key | Mode                                | Detail                                                    |
 | --- | ------------------------------------| --------------------------------------------------------- |
-| 0   | 640x400x70hz bitluni(6bpp)          | 70x400x70Hz                                               |
+| 0   | 640x400x70hz bitluni(6bpp)          | 720x400x70Hz                                              |
 | 1   | 640x400x60hz END bitluni 6bpp       | 640x400x60Hz H(31.46 kHz)  frame(525 lines)  640x480x60Hz |
 | 2   | 640x400x60hz WINDOW bitluni 6bpp    | 640x400x60Hz frame(525 lines)   640x480x60Hz              |
 | 3   | 640x400x60hz MASK bitluni 6bpp      | 640x400x60Hz frame(400 lines)   640x480x60Hz              |
